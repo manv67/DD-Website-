@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dubai RTA - Platinum Edition</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* =========================================
+         * 1. CORE SYSTEM & VARIABLES
+         * ========================================= */
+        :root {
+            --primary-dark: #1e272e;
+            --primary-light: #34495e;
+            --accent-gold: #c29d59;
+            --metro-red: #c0392b;
+            --tram-orange: #d35400;
+            --bg-off-white: #fcfcfc;
+            
+            --shadow-soft: 0 10px 40px rgba(0,0,0,0.04);
+            --shadow-hard: 0 20px 60px rgba(0,0,0,0.12);
+            --font-ui: 'Inter', sans-serif;
+            --font-header: 'Tenor Sans', sans-serif;
+            --radius-std: 20px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+
+        body {
+            height: 100vh; width: 100vw; display: flex; overflow: hidden;
+            font-family: var(--font-ui); background: var(--bg-off-white);
+            color: var(--primary-dark);
+        }
+
+        button, a, input, select, .taxi-card, .tram-station, .map-btn, .chat-btn, .close-chat {
+            position: relative; z-index: 10; cursor: pointer;
+        }
+        
+        /* =========================================
+         * 2. SIDEBAR
+         * ========================================= */
+        .sidebar {
+            width: 350px; min-width: 350px; height: 100%; position: relative;
+            background-color: var(--primary-dark); color: white;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; box-shadow: 10px 0 30px rgba(0,0,0,0.15); z-index: 1000;
+        }
+
+        .sidebar-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('sidebar.jpg'), url('https://images.unsplash.com/photo-1512453979798-5ea904ac66de?q=80&w=1000&auto=format&fit=crop');
+            background-size: cover; background-position: center; opacity: 0.5; z-index: 0;
+            filter: grayscale(20%) contrast(110%);
+        }
+
+        .sidebar-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(30,39,46,0.9), rgba(30,39,46,0.6)); z-index: 1;
+        }
+
+        .nav-menu { position: relative; z-index: 10; display: flex; flex-direction: column; gap: 25px; width: 100%; padding: 0 40px; }
+
+        .nav-link {
+            text-decoration: none; color: rgba(255,255,255,0.7);
+            font-family: var(--font-header); font-size: 2.2rem; transition: all 0.4s ease;
+            display: block; letter-spacing: 0.5px; position: relative; padding-left: 0;
+        }
+        .nav-link::before {
+            content: ''; position: absolute; left: -30px; top: 50%; transform: translateY(-50%);
+            width: 0; height: 2px; background: var(--accent-gold); transition: all 0.3s ease; opacity: 0;
+        }
+        .nav-link:hover, .nav-link.active { color: #fff; transform: translateX(10px); text-shadow: 0 0 20px rgba(255,255,255,0.4); }
+        .nav-link:hover::before, .nav-link.active::before { width: 20px; opacity: 1; }
+
+        .lang-container { position: absolute; bottom: 50px; z-index: 200; }
+        .en-badge {
+            font-size: 1rem; font-weight: 700; border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 30px; color: white; border-radius: 50px; cursor: pointer;
+            transition: 0.3s; letter-spacing: 1px; background: rgba(0,0,0,0.3); backdrop-filter: blur(10px);
+        }
+        .en-badge:hover { background: white; color: var(--primary-dark); border-color: white; }
+
+        .lang-menu {
+            display: none; position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+            background: white; border-radius: 12px; min-width: 160px; z-index: 201;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3); overflow: hidden; padding: 5px; animation: slideUp 0.2s ease-out;
+        }
+        .lang-menu.show { display: block; }
+        .lang-menu li { padding: 10px 15px; cursor: pointer; border-radius: 8px; color: var(--primary-dark); font-weight: 500; font-size: 0.9rem; transition: 0.2s; }
+        .lang-menu li:hover { background: #f4f4f4; color: var(--accent-gold); }
+
+        /* =========================================
+         * 3. MAIN CONTENT
+         * ========================================= */
+        .main-content {
+            flex: 1; height: 100%; overflow-y: auto; background: var(--bg-off-white);
+            padding: 60px 90px; position: relative; z-index: 50;
+        }
+
+        h1.main-title {
+            font-family: var(--font-header); font-size: 4rem; text-align: center;
+            margin-bottom: 70px; color: #1a1a1a; letter-spacing: -1px;
+        }
+
+        .page { display: none; opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease; }
+        .page.active { display: block; opacity: 1; transform: translateY(0); }
+
+        h2 {
+            font-family: var(--font-header); font-size: 2.8rem; margin-bottom: 40px;
+            color: var(--primary-dark); position: relative; display: inline-block;
+        }
+        h2::after {
+            content: ''; position: absolute; bottom: -12px; left: 0; width: 50px; height: 3px; background: var(--accent-gold);
+        }
+
+        .two-column { display: flex; gap: 70px; align-items: flex-start; margin-bottom: 60px; }
+        .text-col { flex: 1.1; }
+        .media-col { flex: 0.9; }
+
+        p.caps-justified {
+            font-family: var(--font-ui); font-size: 1.1rem; line-height: 1.8; text-align: justify;
+            color: #555; margin-bottom: 30px; font-weight: 300; letter-spacing: 0.2px;
+        }
+        strong { font-weight: 700; color: var(--primary-dark); }
+
+        /* =========================================
+         * 4. TOOLS
+         * ========================================= */
+        .tools-container {
+            display: flex; gap: 30px; margin-top: 50px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 50px;
+        }
+        .tool-card {
+            flex: 1; background: #fff; padding: 40px; border-radius: var(--radius-std);
+            border: 1px solid rgba(0,0,0,0.03); box-shadow: var(--shadow-soft);
+            position: relative; z-index: 60; transition: transform 0.3s ease;
+        }
+        .tool-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hard); }
+        .tool-card h3 {
+            font-size: 1.1rem; margin-bottom: 30px; color: var(--primary-dark);
+            font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 12px;
+        }
+        .tool-card h3 i { color: var(--accent-gold); font-size: 1.2rem; }
+
+        .form-group { margin-bottom: 25px; }
+        .form-group label {
+            display: block; font-size: 0.75rem; margin-bottom: 10px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .form-control {
+            width: 100%; padding: 16px; border: 2px solid #f0f0f0; border-radius: 12px;
+            font-size: 1rem; background: #fafafa; transition: 0.3s;
+            font-family: var(--font-ui); color: var(--primary-dark); font-weight: 500;
+        }
+        .form-control:focus { border-color: var(--accent-gold); background: #fff; }
+
+        .btn-calc {
+            width: 100%; padding: 18px; background-color: var(--primary-dark);
+            color: white; border: none; border-radius: 12px; cursor: pointer;
+            font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+            transition: all 0.3s; margin-top: 15px; box-shadow: 0 10px 20px rgba(44,62,80,0.15);
+        }
+        .btn-calc:hover { background-color: #000; transform: translateY(-3px); }
+
+        .result-box {
+            margin-top: 25px; padding: 20px; background: #fdfdfd; border: 1px dashed #ddd; border-radius: 12px;
+            font-weight: 700; color: var(--metro-green); text-align: center; font-size: 1.3rem;
+        }
+
+        /* =========================================
+         * 5. METRO (Simplified for brevity)
+         * ========================================= */
+        .hours-card-full { background: white; padding: 30px; border-radius: var(--radius-std); box-shadow: var(--shadow-soft); margin-bottom: 40px; }
+        .hours-list { list-style: none; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+        .hours-list li { flex: 1; min-width: 200px; background: #f8f9fa; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #eee; }
+        
+        .map-box-full { width: 100%; height: 600px; background: #fff; border-radius: var(--radius-std); overflow: hidden; position: relative; box-shadow: var(--shadow-soft); }
+        .map-interaction-layer { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; cursor: grab; background: #f8f9fa; }
+        .map-controls { position: absolute; bottom: 30px; right: 30px; display: flex; gap: 12px; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 50px; }
+        .map-btn { width: 45px; height: 45px; background: var(--primary-dark); color: white; border: none; border-radius: 50%; font-size: 1rem; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
+
+        /* =========================================
+         * 6. TRAM (FIXED)
+         * ========================================= */
+        .tram-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; }
+        .tram-info-side { display: flex; flex-direction: column; gap: 30px; }
+        
+        .tram-map-container { 
+            background: white; border-radius: var(--radius-std); padding: 50px; 
+            box-shadow: var(--shadow-soft); height: 700px; overflow-y: auto; 
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .tram-line-visual { position: relative; padding-left: 40px; border-left: 4px solid var(--tram-orange); margin-left: 20px; }
+        .tram-station { position: relative; margin-bottom: 50px; }
+        .tram-station::before { content: ''; position: absolute; left: -50px; top: 6px; width: 16px; height: 16px; background: white; border: 4px solid var(--tram-orange); border-radius: 50%; z-index: 2; }
+        .ts-name { font-size: 1.2rem; font-weight: 700; color: var(--primary-dark); display: block; }
+        .badge-interchange { display: inline-block; background: var(--metro-red); color: white; font-size: 0.65rem; padding: 4px 10px; border-radius: 4px; font-weight: 700; margin-left: 12px; vertical-align: middle; }
+        .badge-mono { background: #8e44ad; }
+        
+        .live-status-card { background: var(--primary-dark); color: white; padding: 40px; border-radius: 24px; text-align: center; }
+        .tram-big-timer { font-size: 5rem; font-weight: 800; color: var(--accent-gold); line-height: 1; margin: 20px 0; }
+        
+        .flat-fare-card { background: #fff8e1; border: 1px solid #ffe0b2; padding: 30px; border-radius: 24px; display: flex; align-items: center; justify-content: space-between; }
+        
+        /* =========================================
+         * 7. TAXI (KEEPING THE GOOD DESIGN)
+         * ========================================= */
+        .fleet-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .taxi-card-new {
+            background: #fff;
+            border-radius: 24px;
+            padding: 30px;
+            border: 2px solid transparent;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .taxi-card-new:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+        }
+
+        .taxi-card-new.selected {
+            border-color: var(--accent-gold);
+            background: linear-gradient(to bottom, #fff, #fcfbf8);
+        }
+        
+        .taxi-card-new.selected::after {
+            content: '\f00c';
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            position: absolute;
+            top: 20px; right: 20px;
+            color: var(--accent-gold);
+            font-size: 1.2rem;
+        }
+
+        .taxi-visual {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            color: #bdc3c7;
+            transition: 0.3s;
+        }
+
+        .taxi-card-new.hala .taxi-visual { color: var(--metro-red); }
+        .taxi-card-new.limo .taxi-visual { color: var(--primary-dark); }
+        .taxi-card-new.van .taxi-visual { color: #3498db; }
+
+        .taxi-info h3 {
+            font-family: var(--font-header);
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            color: var(--primary-dark);
+        }
+
+        .taxi-info p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .capacity-badge {
+            background: #f0f2f5;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #555;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .base-fare {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+        .base-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #aaa;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        /* Calculator Bar */
+        .taxi-calc-bar {
+            background: var(--primary-dark);
+            color: white;
+            padding: 30px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            box-shadow: 0 20px 60px rgba(44, 62, 80, 0.25);
+        }
+
+        .calc-input-group { flex: 1; }
+        .calc-input-group label {
+            display: block; font-size: 0.75rem; margin-bottom: 8px;
+            color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px;
+        }
+        .dark-input {
+            width: 100%; padding: 15px; background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;
+            color: white; font-size: 1.1rem; font-family: var(--font-ui);
+        }
+        .dark-input:focus { border-color: var(--accent-gold); background: rgba(255,255,255,0.15); }
+
+        .calc-output {
+            text-align: right;
+            min-width: 150px;
+        }
+        .est-label { font-size: 0.8rem; opacity: 0.7; display: block; margin-bottom: 5px; }
+        .est-price { font-size: 2.2rem; font-weight: 700; color: var(--accent-gold); line-height: 1; }
+
+        /* =========================================
+         * 8. AI CHATBOT
+         * ========================================= */
+        .chat-widget { position: fixed; bottom: 40px; right: 40px; z-index: 200000; }
+        .chat-btn {
+            width: 70px; height: 70px; background: var(--primary-dark);
+            color: white; border-radius: 50%; border: none;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3); font-size: 1.8rem;
+            transition: all 0.3s;
+        }
+        .chat-btn:hover { background: var(--tram-orange); transform: scale(1.1) rotate(10deg); }
+        
+        .chat-box {
+            display: none; position: absolute; bottom: 90px; right: 0;
+            width: 400px; height: 600px; background: white;
+            border-radius: 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+            border: 1px solid rgba(0,0,0,0.05); flex-direction: column; overflow: hidden;
+            animation: popUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        .chat-box.open { display: flex; }
+        @keyframes popUp { from { opacity:0; transform:translateY(20px) scale(0.9); } to { opacity:1; transform:translateY(0) scale(1); } }
+
+        .chat-header {
+            background: var(--primary-dark); color: white; padding: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .chat-content { flex: 1; padding: 20px; overflow-y: auto; background: #f8f9fa; display: flex; flex-direction: column; gap: 15px; }
+        .msg { padding: 12px 16px; border-radius: 18px; max-width: 85%; font-size: 0.9rem; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .bot-msg { background: white; border-bottom-left-radius: 2px; align-self: flex-start; color: #333; }
+        .user-msg { background: var(--primary-dark); border-bottom-right-radius: 2px; align-self: flex-end; color: white; }
+
+        .chat-input-area { padding: 20px; border-top: 1px solid #eee; display: flex; gap: 10px; background: white; }
+        .chat-input { flex: 1; padding: 12px 20px; border: 1px solid #eee; border-radius: 30px; outline: none; transition: 0.2s; background: #fafafa; }
+        .send-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--primary-dark); color: white; border: none; display: flex; justify-content: center; align-items: center; }
+
+        .settings-overlay {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(255,255,255,0.98); backdrop-filter: blur(5px);
+            z-index: 10; padding: 40px 30px; display: none; flex-direction: column; gap: 20px;
+        }
+        .settings-overlay.show { display: flex; }
+
+        body.rtl { direction: rtl; }
+        #metroMapImg { height: 100%; transition: transform 0.2s ease-out; object-fit: contain; }
+        .video-embed { width: 100%; aspect-ratio: 16 / 9; border: none; border-radius: var(--radius-std); box-shadow: var(--shadow-soft); }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-bg"></div>
+        <div class="sidebar-overlay"></div>
+        
+        <div class="nav-menu">
+            <a onclick="switchPage('home', this)" class="nav-link active" id="link-home" data-key="nav_home">Home</a>
+            <a onclick="switchPage('metro', this)" class="nav-link" id="link-metro" data-key="nav_metro">Metro</a>
+            <a onclick="switchPage('tram', this)" class="nav-link" id="link-tram" data-key="nav_tram">Tram</a>
+            <a onclick="switchPage('taxi', this)" class="nav-link" id="link-taxi" data-key="nav_taxi">Taxi</a>
+        </div>
+
+        <div class="lang-container">
+            <div class="en-badge" onclick="toggleLangMenu()" id="currentLangBtn">EN</div>
+            <ul class="lang-menu" id="langMenu">
+                <li onclick="setLanguage('en')">English</li>
+                <li onclick="setLanguage('ar')">العربية (Arabic)</li>
+                <li onclick="setLanguage('hi')">हिन्दी (Hindi)</li>
+                <li onclick="setLanguage('ur')">اردو (Urdu)</li>
+                <li onclick="setLanguage('tl')">Tagalog</li>
+            </ul>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <h1 class="main-title" data-key="main_title">DUBAI TRANSPORT</h1>
+
+        <div id="home" class="page active">
+            <h2 data-key="home_header">Welcome to Dubai</h2>
+            <div class="two-column">
+                <div class="text-col">
+                    <p class="caps-justified" data-key="home_text_1">Dubai’s public transportation network stands as a global benchmark for urban mobility. The system is designed to handle the desert climate, ensuring that every journey is cool, punctual, and efficient.</p>
+                    <p class="caps-justified" data-key="home_text_2">At its heart is the Dubai Metro, a fully automated, driverless system. This is complemented by an extensive fleet of modern buses and water taxis, all interconnected through the unified <strong>Nol Card</strong> system.</p>
+                </div>
+                <div class="media-col">
+                    <iframe class="video-embed" src="https://www.youtube.com/embed/PhpFPe65sOU?autoplay=1&mute=1&loop=1&playlist=PhpFPe65sOU" allowfullscreen></iframe>
+                </div>
+            </div>
+
+            <div class="tools-container">
+                <div class="tool-card">
+                    <h3 data-key="tool_journey_title"><i class="fas fa-map-signs"></i> Journey Planner</h3>
+                    <div class="form-group"><label data-key="lbl_from">Origin Station</label><select id="journey-from" class="form-control station-list"></select></div>
+                    <div class="form-group"><label data-key="lbl_to">Destination Station</label><select id="journey-to" class="form-control station-list"></select></div>
+                    <button class="btn-calc" onclick="calculateJourney()" data-key="btn_plan">Plan Route</button>
+                    <div id="journey-result" class="result-box">Select Stations</div>
+                </div>
+                
+                <div class="tool-card">
+                    <h3 data-key="tool_fare_title"><i class="fas fa-wallet"></i> Fare Calculator</h3>
+                    <div class="form-group"><label data-key="lbl_from">Origin Station</label><select id="fare-from" class="form-control station-list"></select></div>
+                    <div class="form-group"><label data-key="lbl_to">Destination Station</label><select id="fare-to" class="form-control station-list"></select></div>
+                    <button class="btn-calc" onclick="calculateFare()" data-key="btn_calc">Check Price</button>
+                    <div id="fare-result" class="result-box">0.00 AED</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="metro" class="page">
+            <h2 data-key="metro_header">Metro Network</h2>
+            <p class="caps-justified" data-key="metro_text_1">Dubai’s current metro network is a world-class system featuring the <strong>Red Line</strong>, which connects major landmarks like the Burj Khalifa and Dubai Marina, and the <strong>Green Line</strong>, which serves the city's historic cultural hubs.</p>
+            <p class="caps-justified" data-key="metro_text_2">As of 2026, the network is undergoing its most significant expansion yet with the <strong>Blue Line</strong>.</p>
+
+            <div class="hours-card-full">
+                <h3 data-key="metro_hours_title" style="color:#2c3e50; margin-bottom:20px; font-weight:700; text-transform:uppercase;"><i class="far fa-clock"></i> Operating Hours</h3>
+                <ul class="hours-list">
+                    <li><strong>Mon - Thu</strong> <span>05:00 AM - 12:00 AM</span></li>
+                    <li><strong>Friday</strong> <span>05:00 AM - 01:00 AM</span></li>
+                    <li><strong>Sat - Sun</strong> <span>05:00 AM - 12:00 AM</span></li>
+                </ul>
+            </div>
+
+            <div class="map-box-full">
+                <div class="map-interaction-layer" id="mapLayer">
+                    <img src="map.jpg" id="metroMapImg" alt="Dubai Metro Map" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Dubai_Metro_Route_Map.png/1200px-Dubai_Metro_Route_Map.png';">
+                </div>
+                <div class="map-controls">
+                    <button class="map-btn" onclick="zoom(0.2)"><i class="fas fa-plus"></i></button>
+                    <button class="map-btn" onclick="resetZoom()"><i class="fas fa-compress"></i></button>
+                    <button class="map-btn" onclick="zoom(-0.2)"><i class="fas fa-minus"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tram" class="page">
+            <h2 data-key="tram_header">Dubai Tram</h2>
+            <p class="caps-justified" data-key="tram_text_1">Connecting the Dubai Marina, JBR, and Al Sufouh areas. The Dubai Tram is integrated with the Metro and Monorail.</p>
+            
+            <div class="tram-grid">
+                <div class="tram-info-side">
+                    <div class="live-status-card">
+                        <span style="opacity:0.7; letter-spacing:2px; text-transform:uppercase;">Next Arrival</span>
+                        <div class="tram-big-timer" id="tramCountdown">04:30</div>
+                        <div style="background:rgba(255,255,255,0.1); padding:10px; border-radius:50px; display:inline-block; font-size:0.8rem;">
+                            <span style="color:#2ecc71;">●</span> Service Normal
+                        </div>
+                    </div>
+
+                    <div class="flat-fare-card">
+                        <div>
+                            <h3 style="color:#d35400; font-size:1.2rem; margin-bottom:5px;">Flat Rate</h3>
+                            <span style="color:#7f8c8d; font-size:0.9rem;">Valid for any single journey.</span>
+                        </div>
+                        <div style="font-size:2rem; font-weight:800; color:#1e272e;">3 AED</div>
+                    </div>
+                </div>
+
+                <div class="tram-map-container">
+                    <h3 data-key="tram_stations_title" style="margin-bottom:30px; color:#2c3e50; font-weight:800; text-transform:uppercase;">Route Map</h3>
+                    <div class="tram-line-visual">
+                        <div class="tram-station"><span class="ts-name">01. Jumeirah Beach Residence 1</span><span class="ts-area">JBR Walk</span></div>
+                        <div class="tram-station"><span class="ts-name">02. Jumeirah Beach Residence 2</span><span class="ts-area">The Beach</span></div>
+                        <div class="tram-station"><span class="ts-name">03. JLT <span class="badge-interchange">Metro</span></span><span class="ts-area">Marina North</span></div>
+                        <div class="tram-station"><span class="ts-name">04. Dubai Marina Mall</span><span class="ts-area">Marina Promenade</span></div>
+                        <div class="tram-station"><span class="ts-name">05. Dubai Marina <span class="badge-interchange">Metro</span></span><span class="ts-area">Marina South</span></div>
+                        <div class="tram-station"><span class="ts-name">06. Marina Towers</span><span class="ts-area">Residential</span></div>
+                        <div class="tram-station"><span class="ts-name">07. Mina Seyahi</span><span class="ts-area">Westin / Le Meridien</span></div>
+                        <div class="tram-station"><span class="ts-name">08. Media City</span><span class="ts-area">Business Hub</span></div>
+                        <div class="tram-station"><span class="ts-name">09. Palm Jumeirah <span class="badge-interchange badge-mono">Mono</span></span><span class="ts-area">Palm Gateway</span></div>
+                        <div class="tram-station"><span class="ts-name">10. Knowledge Village</span><span class="ts-area">Education Hub</span></div>
+                        <div class="tram-station"><span class="ts-name">11. Al Sufouh</span><span class="ts-area">Depot Terminus</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="taxi" class="page">
+            <h2 data-key="taxi_header">Taxi Fleet</h2>
+            <p class="caps-justified" data-key="taxi_text_1">While Taxis aren't as cheap as other modes of transport, they are still one of the most convenient and reliable ways to get around Dubai. 
+                There are different types of taxis in Dubai, each with their own unique features and prices.
+            </p>
+            
+            <div class="fleet-container">
+                <div class="taxi-card-new hala selected" onclick="selectTaxi(this, 1)">
+                    <div class="taxi-visual"><i class="fas fa-taxi"></i></div>
+                    <div class="taxi-info" style="text-align:center;">
+                        <span class="capacity-badge"><i class="fas fa-user-friends"></i> 4 Pax</span>
+                        <h3 data-key="taxi_hala">Hala Taxi</h3>
+                        <p data-key="taxi_hala_desc">Standard meter. Affordable & Everywhere.</p>
+                        <div class="base-fare">12.00 <span style="font-size:1rem;">AED</span></div>
+                        <div class="base-label">Min Fare</div>
+                    </div>
+                </div>
+
+                <div class="taxi-card-new limo" onclick="selectTaxi(this, 1.6)">
+                    <div class="taxi-visual"><i class="fas fa-car-side"></i></div>
+                    <div class="taxi-info" style="text-align:center;">
+                        <span class="capacity-badge"><i class="fas fa-user-tie"></i> 4 Pax</span>
+                        <h3 data-key="taxi_limo">Lexus Limo</h3>
+                        <p data-key="taxi_limo_desc">Premium comfort. Business Class.</p>
+                        <div class="base-fare">25.00 <span style="font-size:1rem;">AED</span></div>
+                        <div class="base-label">Min Fare</div>
+                    </div>
+                </div>
+
+                <div class="taxi-card-new van" onclick="selectTaxi(this, 1.4)">
+                    <div class="taxi-visual"><i class="fas fa-shuttle-van"></i></div>
+                    <div class="taxi-info" style="text-align:center;">
+                        <span class="capacity-badge"><i class="fas fa-users"></i> 7 Pax</span>
+                        <h3 data-key="taxi_van">Taxi Max</h3>
+                        <p data-key="taxi_van_desc">Spacious. Perfect for families/luggage.</p>
+                        <div class="base-fare">20.00 <span style="font-size:1rem;">AED</span></div>
+                        <div class="base-label">Min Fare</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="taxi-calc-bar">
+                <div class="calc-input-group">
+                    <label>Trip Distance (KM)</label>
+                    <input type="number" id="taxiDist" class="dark-input" placeholder="e.g. 15" onkeyup="calcTaxi()">
+                </div>
+                <div class="calc-output">
+                    <span class="est-label">ESTIMATED FARE</span>
+                    <div class="est-price" id="taxiResult">0.00 AED</div>
+                </div>
+                <button class="btn-calc" style="background:var(--accent-gold); color:white; width:auto; margin:0; padding: 15px 40px;">BOOK NOW</button>
+            </div>
+        </div>
+
+    </main>
+
+    <div class="chat-widget">
+        <button class="chat-btn" onclick="toggleChat()"><i class="fas fa-robot"></i></button>
+        <div class="chat-box" id="chatBox">
+            <div class="chat-header">
+                <div class="chat-title"><h4>AI Assistant</h4><span id="connStatus" style="color:#bbb; font-size:0.75rem;">(Offline)</span></div>
+                <div class="chat-controls"><i class="fas fa-cog" onclick="toggleSettings()"></i><i class="fas fa-times" onclick="toggleChat()"></i></div>
+            </div>
+            
+            <div class="settings-overlay" id="settingsPanel">
+                <h3 style="color:#2c3e50; margin-bottom:10px;">AI Settings</h3>
+                <div class="form-group">
+                    <label>Provider</label>
+                    <select id="aiProvider" class="form-control">
+                        <option value="groq">Groq (Llama 3.3)</option>
+                        <option value="gemini">Google Gemini (Free Tier)</option>
+                        <option value="openai">OpenAI (Paid)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="userApiKey" class="form-control" placeholder="Paste Key Here...">
+                </div>
+                <button class="btn-calc" onclick="saveSettings()">Connect</button>
+                <div style="margin-top:auto; text-align:center; cursor:pointer; color:#777;" onclick="toggleSettings()">Close</div>
+            </div>
+
+            <div class="chat-content" id="chatMessages">
+                <div class="msg bot-msg">Hello! I am your Dubai Transport guide. I can help with fares, routes, and timings.</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Type a message..." onkeypress="handleEnter(event)">
+                <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG
+        const HARDCODED_KEY = ""; 
+
+        // ALL 53 DUBAI METRO STATIONS (RED & GREEN LINES)
+        const stations = [
+            // --- RED LINE ---
+            { name: "Centrepoint (Rashidiya) [Red]", zone: 5 },
+            { name: "Emirates [Red]", zone: 5 },
+            { name: "Airport Terminal 3 [Red]", zone: 5 },
+            { name: "Airport Terminal 1 [Red]", zone: 5 },
+            { name: "GGICO [Red]", zone: 5 },
+            { name: "City Centre Deira [Red]", zone: 5 },
+            { name: "Al Rigga [Red]", zone: 5 },
+            { name: "Union [Red/Green]", zone: 5 },
+            { name: "BurJuman [Red/Green]", zone: 6 },
+            { name: "ADCB [Red]", zone: 6 },
+            { name: "Max (Al Jafiliya) [Red]", zone: 6 },
+            { name: "World Trade Centre [Red]", zone: 6 },
+            { name: "Emirates Towers [Red]", zone: 6 },
+            { name: "Financial Centre [Red]", zone: 6 },
+            { name: "Burj Khalifa / Dubai Mall [Red]", zone: 6 },
+            { name: "Business Bay [Red]", zone: 6 },
+            { name: "ONPASSIVE (Al Safa) [Red]", zone: 6 },
+            { name: "Equiti [Red]", zone: 2 },
+            { name: "Mall of the Emirates [Red]", zone: 2 },
+            { name: "Mashreq [Red]", zone: 2 },
+            { name: "Dubai Internet City [Red]", zone: 2 },
+            { name: "Al Khail [Red]", zone: 2 },
+            { name: "Sobha Realty (Dubai Marina) [Red]", zone: 2 },
+            { name: "DMCC [Red]", zone: 2 },
+            { name: "Jebel Ali [Red]", zone: 1 },
+            { name: "Ibn Battuta [Red]", zone: 1 },
+            { name: "Energy [Red]", zone: 1 },
+            { name: "Danube [Red]", zone: 1 },
+            { name: "UAE Exchange [Red]", zone: 1 },
+            // --- ROUTE 2020 EXTENSION ---
+            { name: "The Gardens [Red]", zone: 1 },
+            { name: "Discovery Gardens [Red]", zone: 1 },
+            { name: "Al Furjan [Red]", zone: 1 },
+            { name: "Jumeirah Golf Estates [Red]", zone: 1 },
+            { name: "Dubai Investment Park (DIP) [Red]", zone: 1 },
+            { name: "EXPO 2020 [Red]", zone: 1 },
+            // --- GREEN LINE ---
+            { name: "Etisalat [Green]", zone: 5 },
+            { name: "Al Qusais [Green]", zone: 5 },
+            { name: "Dubai Airport Free Zone (DAFZA) [Green]", zone: 5 },
+            { name: "Al Nahda [Green]", zone: 5 },
+            { name: "Stadium [Green]", zone: 5 },
+            { name: "Al Qiyadah [Green]", zone: 5 },
+            { name: "Abu Hail [Green]", zone: 5 },
+            { name: "Abu Baker Al Siddique [Green]", zone: 5 },
+            { name: "Salah Al Din [Green]", zone: 5 },
+            { name: "Baniyas Square [Green]", zone: 5 },
+            { name: "Gold Souq [Green]", zone: 5 },
+            { name: "Al Ras [Green]", zone: 5 },
+            { name: "Al Ghubaiba [Green]", zone: 6 },
+            { name: "Sharaf DG [Green]", zone: 6 },
+            { name: "Oud Metha [Green]", zone: 6 },
+            { name: "Dubai Healthcare City [Green]", zone: 6 },
+            { name: "Al Jadaf [Green]", zone: 6 },
+            { name: "Creek [Green]", zone: 6 }
+        ];
+
+        // FULL TRANSLATION PACK (Fixed and Complete)
+        const translations = {
+            en: {
+                main_title: "DUBAI TRANSPORT", 
+                nav_home: "Home", nav_metro: "Metro", nav_tram: "Tram", nav_taxi: "Taxi",
+                home_header: "Welcome to Dubai", 
+                home_text_1: "Dubai’s public transportation network stands as a global benchmark for urban mobility. The system is designed to handle the desert climate, ensuring that every journey is cool, punctual, and efficient.",
+                home_text_2: "At its heart is the Dubai Metro, a fully automated, driverless system. This is complemented by an extensive fleet of modern buses and water taxis, all interconnected through the unified Nol Card system.",
+                tool_journey_title: "Journey Planner", tool_fare_title: "Fare Calculator", 
+                lbl_from: "Origin Station", lbl_to: "Destination Station", 
+                btn_plan: "Plan Route", btn_calc: "Check Price",
+                metro_header: "Metro Network",
+                metro_text_1: "Dubai’s current metro network is a world-class system featuring the Red Line, which connects major landmarks like the Burj Khalifa and Dubai Marina, and the Green Line, which serves the city's historic cultural hubs.",
+                metro_text_2: "As of 2026, the network is undergoing its most significant expansion yet with the Blue Line.",
+                metro_hours_title: "Operating Hours",
+                tram_header: "Dubai Tram", 
+                tram_text_1: "Connecting the Dubai Marina, JBR, and Al Sufouh areas. The Dubai Tram is integrated with the Metro and Monorail.",
+                tram_stations_title: "Route Map", 
+                taxi_header: "Taxi Fleet", 
+                taxi_text_1: "While Taxis aren't as cheap as other modes of transport, they are still one of the most convenient and reliable ways to get around Dubai. There are different types of taxis in Dubai, each with their own unique features and prices.",
+                taxi_hala: "Hala Taxi", taxi_hala_desc: "Standard meter. Affordable & Everywhere.", 
+                taxi_limo: "Lexus Limo", taxi_limo_desc: "Premium comfort. Business Class.", 
+                taxi_van: "Taxi Max", taxi_van_desc: "Spacious. Perfect for families/luggage."
+            },
+            ar: {
+                main_title: "مواصلات دبي", 
+                nav_home: "الرئيسية", nav_metro: "مترو", nav_tram: "ترام", nav_taxi: "تاكسي",
+                home_header: "مرحباً بكم في دبي", 
+                home_text_1: "تعتبر شبكة المواصلات العامة في دبي معياراً عالمياً للتنقل الحضري. تم تصميم النظام للتعامل مع المناخ الصحراوي، مما يضمن أن تكون كل رحلة باردة، ودقيقة، وفعالة.",
+                home_text_2: "في قلب هذه الشبكة يوجد مترو دبي، وهو نظام آلي بالكامل بدون سائق. يكمله أسطول واسع من الحافلات الحديثة والتاكسي المائي، جميعها متصلة بنظام بطاقة نول الموحد.",
+                tool_journey_title: "مخطط الرحلات", tool_fare_title: "حاسبة الأجرة", 
+                lbl_from: "محطة الانطلاق", lbl_to: "محطة الوصول", 
+                btn_plan: "خطط الرحلة", btn_calc: "احسب الأجرة",
+                metro_header: "شبكة المترو",
+                metro_text_1: "تتميز شبكة مترو دبي بالخط الأحمر الذي يربط المعالم الرئيسية مثل برج خليفة ومرسى دبي، والخط الأخضر الذي يخدم المراكز الثقافية والتاريخية في المدينة.",
+                metro_text_2: "اعتباراً من عام 2026، تشهد الشبكة أكبر توسع لها على الإطلاق مع إضافة الخط الأزرق.",
+                metro_hours_title: "ساعات العمل",
+                tram_header: "ترام دبي", 
+                tram_text_1: "يربط بين مرسى دبي، جي بي آر، والصفوح. يتكامل الترام بشكل تام مع المترو والمونوريل.",
+                tram_stations_title: "خريطة المسار", 
+                taxi_header: "أسطول التاكسي", 
+                taxi_text_1: "على الرغم من أن سيارات الأجرة ليست رخيصة مثل وسائل النقل الأخرى، إلا أنها لا تزال واحدة من أكثر الطرق ملاءمة وموثوقية للتنقل في دبي. تتوفر أنواع مختلفة من سيارات الأجرة في دبي، لكل منها ميزات وأسعار فريدة.",
+                taxi_hala: "هلا تاكسي", taxi_hala_desc: "عداد قياسي. ميسور التكلفة ومتوفر في كل مكان.", 
+                taxi_limo: "ليموزين", taxi_limo_desc: "راحة متميزة. درجة رجال الأعمال.", 
+                taxi_van: "تاكسي عائلي", taxi_van_desc: "واسع. مثالي للعائلات والأمتعة."
+            },
+            hi: {
+                main_title: "दुबई परिवहन", 
+                nav_home: "होम", nav_metro: "मेट्रो", nav_tram: "ट्राम", nav_taxi: "टैक्सी",
+                home_header: "दुबई में आपका स्वागत है", 
+                home_text_1: "दुबई का सार्वजनिक परिवहन नेटवर्क शहरी गतिशीलता के लिए एक वैश्विक बेंचमार्क है। यह प्रणाली रेगिस्तानी जलवायु को संभालने के लिए डिज़ाइन की गई है, जिससे हर यात्रा सुखद, समयनिष्ठ और कुशल बनती है।",
+                home_text_2: "इसके केंद्र में दुबई मेट्रो है, जो पूरी तरह से स्वचालित और चालक रहित प्रणाली है। इसके साथ ही आधुनिक बसों और वाटर टैक्सियों का एक बड़ा बेड़ा भी है, जो सभी 'नोल कार्ड' सिस्टम के माध्यम से जुड़े हुए हैं।",
+                tool_journey_title: "यात्रा योजना", tool_fare_title: "किराया कैलकुलेटर", 
+                lbl_from: "प्रारंभिक स्टेशन", lbl_to: "गंतव्य स्टेशन", 
+                btn_plan: "योजना बनाएं", btn_calc: "किराया जांचें",
+                metro_header: "मेट्रो नेटवर्क",
+                metro_text_1: "दुबई मेट्रो में रेड लाइन शामिल है, जो बुर्ज खलीफा और दुबई मरीना जैसे प्रमुख स्थलों को जोड़ती है, और ग्रीन लाइन, जो शहर के ऐतिहासिक सांस्कृतिक केंद्रों की सेवा करती है।",
+                metro_text_2: "2026 तक, यह नेटवर्क ब्लू लाइन के साथ अपने अब तक के सबसे बड़े विस्तार के दौर से गुजर रहा है।",
+                metro_hours_title: "संचालन का समय",
+                tram_header: "दुबई ट्राम", 
+                tram_text_1: "दुबई मरीना, जेबीआर और अल सुफौह क्षेत्रों को जोड़ता है। दुबई ट्राम मेट्रो और मोनोरेल के साथ एकीकृत है।",
+                tram_stations_title: "रूट मैप", 
+                taxi_header: "टैक्सी फ्लीट", 
+                taxi_text_1: "हालांकि टैक्सियां परिवहन के अन्य साधनों जितनी सस्ती नहीं हैं, फिर भी वे दुबई में घूमने के लिए सबसे सुविधाजनक और विश्वसनीय तरीकों में से एक हैं। दुबई में विभिन्न प्रकार की टैक्सियां ​​हैं, जिनमें से प्रत्येक की अपनी अनूठी विशेषताएं और कीमतें हैं।",
+                taxi_hala: "हला टैक्सी", taxi_hala_desc: "मानक मीटर। किफायती और हर जगह उपलब्ध।", 
+                taxi_limo: "लिमोसिन", taxi_limo_desc: "प्रीमियम आराम। बिजनेस क्लास।", 
+                taxi_van: "टैक्सी मैक्स", taxi_van_desc: "विशाल। परिवारों और सामान के लिए एकदम सही।"
+            },
+            ur: {
+                main_title: "دبئی ٹرانسپورٹ", 
+                nav_home: "ہوم", nav_metro: "میٹرو", nav_tram: "ترام", nav_taxi: "ٹیکسی",
+                home_header: "دبئی میں خوش آمدید", 
+                home_text_1: "دبئی کا پبلک ٹرانسپورٹ نیٹ ورک شہری نقل و حرکت کے لیے ایک عالمی معیار ہے۔ یہ نظام صحرائی آب و ہوا سے نمٹنے کے لیے بنایا گیا ہے، جو ہر سفر کو آرام دہ، وقت کا پابند اور موثر بناتا ہے۔",
+                home_text_2: "اس کے مرکز میں دبئی میٹرو ہے، جو ایک مکمل طور پر خودکار، ڈرائیور کے بغیر نظام ہے۔ اس کے ساتھ جدید بسوں اور واٹر ٹیکسیوں کا ایک وسیع فلیٹ بھی موجود ہے، جو سب نول کارڈ سسٹم کے ذریعے جڑے ہوئے ہیں۔",
+                tool_journey_title: "سفر کا منصوبہ", tool_fare_title: "کرایہ کیلکولیٹر", 
+                lbl_from: "کہاں سے", lbl_to: "کہاں تک", 
+                btn_plan: "منصوبہ بنائیں", btn_calc: "کرایہ چیک کریں",
+                metro_header: "میٹرو نیٹ ورک",
+                metro_text_1: "دبئی میٹرو ایک عالمی معیار کا نظام ہے جس میں ریڈ لائن شامل ہے، جو برج خلیفہ اور دبئی مرینا جیسے اہم مقامات کو جوڑتی ہے، اور گرین لائن، جو شہر کے تاریخی اور ثقافتی مراکز کو خدمات فراہم کرتی ہے۔",
+                metro_text_2: "2026 تک، یہ نیٹ ورک بلیو لائن کے ساتھ اپنی اب تک کی سب سے بڑی توسیع سے گزر رہا ہے۔",
+                metro_hours_title: "اوقات کار",
+                tram_header: "دبئی ٹرام", 
+                tram_text_1: "دبئی مرینا، جے بی آر، اور الصفوح کے علاقوں کو جوڑتا ہے۔ دبئی ٹرام میٹرو اور مونوریل کے ساتھ مربوط ہے۔",
+                tram_stations_title: "روٹ میپ", 
+                taxi_header: "ٹیکسی سروس", 
+                taxi_text_1: "اگرچہ ٹیکسیاں ٹرانسپورٹ کے دیگر ذرائع کی طرح سستی نہیں ہیں، لیکن پھر بھی وہ دبئی میں گھومنے کے لیے سب سے آسان اور قابل اعتماد ذرائع میں سے ایک ہیں۔ دبئی میں مختلف قسم کی ٹیکسیاں موجود ہیں، جن میں سے ہر ایک کی اپنی منفرد خصوصیات اور قیمتیں ہیں۔",
+                taxi_hala: "ہالا ٹیکسی", taxi_hala_desc: "معیاری میٹر۔ سستی اور ہر جگہ دستیاب۔", 
+                taxi_limo: "لیموزین", taxi_limo_desc: "پریمیم آرام۔ بزنس کلاس۔", 
+                taxi_van: "ٹیکسی میکس", taxi_van_desc: "کشادہ۔ خاندانوں اور سامان کے لیے بہترین۔"
+            },
+            tl: {
+                main_title: "TRANSPORTASYON", 
+                nav_home: "Tahanan", nav_metro: "Metro", nav_tram: "Tram", nav_taxi: "Taxi",
+                home_header: "Maligayang pagdating", 
+                home_text_1: "Ang pampublikong network ng transportasyon ng Dubai ay isang pandaigdigang pamantayan para sa kadaliang kumilos sa lunsod. Ang sistema ay dinisenyo upang hawakan ang disyerto ng klima, tinitiyak na ang bawat paglalakbay ay cool at episyente.",
+                home_text_2: "Nasa puso nito ang Dubai Metro, isang ganap na awtomatiko, at driverless na sistema. Kasama rin dito ang malawak na hanay ng mga modernong bus at water taxi, na lahat ay konektado sa pamamagitan ng Nol Card system.",
+                tool_journey_title: "Planner ng Biyahe", tool_fare_title: "Fare Calculator", 
+                lbl_from: "Mula sa Istasyon", lbl_to: "Papunta sa Istasyon", 
+                btn_plan: "Planuhin ang Ruta", btn_calc: "Tingnan ang Presyo",
+                metro_header: "Metro Network",
+                metro_text_1: "Nagtatampok ang network ng metro ng Dubai ng Red Line, na nag-uugnay sa mga pangunahing landmark tulad ng Burj Khalifa at Dubai Marina, at ang Green Line, na nagsisilbi sa mga makasaysayang hub ng lungsod.",
+                metro_text_2: "Pagsapit ng 2026, ang network ay dumadaan sa pinakamalaking pagpapalawak nito gamit ang Blue Line.",
+                metro_hours_title: "Oras ng Operasyon",
+                tram_header: "Dubai Tram", 
+                tram_text_1: "Kumokonekta sa mga lugar ng Dubai Marina, JBR, at Al Sufouh. Ang Dubai Tram ay isinama sa Metro at Monorail.",
+                tram_stations_title: "Mapa ng Ruta", 
+                taxi_header: "Serbisyo ng Taxi", 
+                taxi_text_1: "Bagama't hindi kasing mura ang mga Taxi tulad ng ibang paraan ng transportasyon, isa pa rin sila sa pinaka maginhawa at maaasahang paraan para makalibot sa Dubai. Mayroong iba't ibang uri ng mga taxi sa Dubai, bawat isa ay may sariling mga tampok at presyo.",
+                taxi_hala: "Hala Taxi", taxi_hala_desc: "Standard meter. Abot-kaya at laging nandiyan.", 
+                taxi_limo: "Limousine", taxi_limo_desc: "Premium na komportable. Business Class.", 
+                taxi_van: "Taxi Max", taxi_van_desc: "Maluwang. Perpekto para sa mga pamilya/bagahe."
+            }
+        };
+
+        // STATE
+        let AI_CONFIG = {
+            provider: localStorage.getItem('ai_provider') || 'groq',
+            key: HARDCODED_KEY || localStorage.getItem('ai_key') || '',
+            model: localStorage.getItem('ai_model') || ''
+        };
+        let chatHistory = [];
+        let multiplier = 1;
+
+        // INIT
+        window.onload = function() {
+            const selects = document.querySelectorAll('.station-list');
+            selects.forEach(s => stations.forEach((st, i) => { const o = document.createElement('option'); o.value = i; o.text = st.name; s.appendChild(o); }));
+            
+            if(AI_CONFIG.key) {
+                document.getElementById('connStatus').innerText = "(Online)";
+                document.getElementById('connStatus').style.color = "#2ecc71";
+                document.getElementById('aiProvider').value = AI_CONFIG.provider;
+            }
+
+            // Tram Timer
+            let tm=4, ts=30;
+            setInterval(()=>{
+                ts--; if(ts<0){ts=59;tm--;} if(tm<0){tm=5;}
+                const disp = `0${tm}:${ts<10?'0'+ts:ts}`;
+                document.getElementById('tramCountdown').innerText = disp;
+            }, 1000);
+        };
+
+        // UI LOGIC
+        function switchPage(p, btn) {
+            document.querySelectorAll('.page').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(e => e.classList.remove('active'));
+            document.getElementById(p).classList.add('active');
+            if(btn) btn.classList.add('active'); else document.getElementById('link-'+p).classList.add('active');
+        }
+
+        function toggleLangMenu() { document.getElementById('langMenu').classList.toggle('show'); }
+        function setLanguage(l) {
+            const t = translations[l];
+            for(let key in t) {
+                const elements = document.querySelectorAll(`[data-key="${key}"]`);
+                elements.forEach(el => el.innerText = t[key]);
+            }
+            document.getElementById('currentLangBtn').innerText = l.toUpperCase();
+            document.body.classList.toggle('rtl', l==='ar'||l==='ur');
+            document.getElementById('langMenu').classList.remove('show');
+        }
+
+        // TAXI LOGIC
+        function selectTaxi(card, m) {
+            document.querySelectorAll('.taxi-card-new').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            multiplier = m;
+            calcTaxi();
+        }
+
+        function calcTaxi() {
+            const d = parseFloat(document.getElementById('taxiDist').value);
+            if(d) {
+                const base = (12 * multiplier);
+                const rate = (2.19 * multiplier);
+                const total = base + (d * rate);
+                document.getElementById('taxiResult').innerText = total.toFixed(2) + " AED";
+            } else {
+                document.getElementById('taxiResult').innerText = "0.00 AED";
+            }
+        }
+
+        // AI LOGIC (FIXED GROQ MODEL)
+        function toggleChat() { document.getElementById('chatBox').classList.toggle('open'); }
+        function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('show'); }
+        function handleEnter(e) { if(e.key === 'Enter') sendMessage(); }
+
+        async function saveSettings() {
+            const p = document.getElementById('aiProvider').value;
+            const k = document.getElementById('userApiKey').value.trim();
+            if(!k) return alert("Key required");
+            
+            document.getElementById('connStatus').innerText = "(Connecting...)";
+            
+            if(p === 'groq') AI_CONFIG.model = 'llama-3.3-70b-versatile'; 
+            if(p === 'gemini') AI_CONFIG.model = 'gemini-1.5-flash';
+            if(p === 'openai') AI_CONFIG.model = 'gpt-4o-mini';
+
+            AI_CONFIG.provider = p; 
+            AI_CONFIG.key = k;
+            localStorage.setItem('ai_provider', p); 
+            localStorage.setItem('ai_key', k);
+
+            document.getElementById('connStatus').innerText = "(Online)";
+            document.getElementById('connStatus').style.color = "#2ecc71";
+            toggleSettings();
+            addMsg(`Connected to ${p.toUpperCase()}.`, 'bot-msg');
+        }
+
+        async function sendMessage() {
+            const i = document.getElementById('chatInput');
+            const txt = i.value.trim();
+            if(!txt) return;
+            
+            addMsg(txt, 'user-msg');
+            i.value = '';
+            
+            const key = AI_CONFIG.key || HARDCODED_KEY;
+            if(!key) return addMsg("API Key Missing.", 'bot-msg');
+
+            // Build History
+            if(chatHistory.length===0) chatHistory.push({role:'system', content:"You are a Dubai RTA assistant. Helpful, concise."});
+            chatHistory.push({role:'user', content:txt});
+
+            try {
+                let reply = "";
+                
+                // GROQ / OPENAI (Compatible APIs)
+                if(AI_CONFIG.provider === 'groq' || AI_CONFIG.provider === 'openai') {
+                    const url = AI_CONFIG.provider === 'groq' 
+                        ? "https://api.groq.com/openai/v1/chat/completions" 
+                        : "https://api.openai.com/v1/chat/completions";
+                    
+                    const modelID = AI_CONFIG.model || (AI_CONFIG.provider === 'groq' ? 'llama-3.3-70b-versatile' : 'gpt-4o-mini');
+
+                    const r = await fetch(url, {
+                        method:'POST', 
+                        headers:{'Content-Type':'application/json', 'Authorization':`Bearer ${key}`},
+                        body:JSON.stringify({
+                            model: modelID,
+                            messages: chatHistory
+                        })
+                    });
+                    const d = await r.json();
+                    if(d.error) throw new Error(d.error.message);
+                    reply = d.choices[0].message.content;
+                    chatHistory.push({role:'assistant', content:reply});
+                } 
+                // GOOGLE GEMINI
+                else if(AI_CONFIG.provider === 'gemini') {
+                    const modelID = AI_CONFIG.model || 'gemini-1.5-flash';
+                    const gHist = chatHistory.filter(m=>m.role!=='system').map(m=>({role:m.role==='user'?'user':'model', parts:[{text:m.content}]}));
+                    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelID}:generateContent?key=${key}`, {
+                        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({contents:gHist})
+                    });
+                    const d = await r.json();
+                    if(d.error) throw new Error(d.error.message);
+                    reply = d.candidates[0].content.parts[0].text;
+                    chatHistory.push({role:'assistant', content:reply});
+                }
+
+                addMsg(reply, 'bot-msg');
+            } catch(e) { addMsg("Error: " + e.message, 'bot-msg'); }
+        }
+
+        function addMsg(t, c) {
+            const d = document.createElement('div'); d.className = `msg ${c}`;
+            d.innerHTML = t.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            const box = document.getElementById('chatMessages');
+            box.appendChild(d); box.scrollTop = box.scrollHeight;
+        }
+
+        // Map & Journey Logic placeholders
+        function calculateJourney() { document.getElementById('journey-result').innerText = "Arriving in 15 mins"; }
+        function calculateFare() { document.getElementById('fare-result').innerText = "5.00 AED"; }
+        let scale=1; function zoom(v){scale+=v; document.getElementById('metroMapImg').style.transform=`scale(${scale})`;}
+        function resetZoom(){scale=1; document.getElementById('metroMapImg').style.transform=`scale(1)`;}
+        
+    </script>
+</body>
+</html>
